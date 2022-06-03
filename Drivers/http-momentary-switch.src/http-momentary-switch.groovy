@@ -1,5 +1,5 @@
 /**
- *  HTTP Momentary Switch
+ *  HTTP Toggle Switch
  *
  *  Copyright 2018 Daniel Ogorchock
  *
@@ -24,9 +24,8 @@
  */
 
 metadata {
-    definition (name: "HTTP Momentary Switch", namespace: "ogiewon", author: "Dan Ogorchock", importUrl: "https://raw.githubusercontent.com/ogiewon/Hubitat/master/Drivers/http-momentary-switch.src/http-momentary-switch.groovy") {
+    definition (name: "HTTP Toggle Switch", namespace: "ogiewon", author: "Dan Ogorchock", importUrl: "https://raw.githubusercontent.com/ogiewon/Hubitat/master/Drivers/http-momentary-switch.src/http-momentary-switch.groovy") {
         capability "Switch"
-        capability "Momentary"
 	}
 
     preferences {
@@ -36,7 +35,8 @@ metadata {
         input(name: "deviceMethod", type: "enum", title: "POST, GET, or PUT", options: ["POST","GET","PUT"], defaultValue: "POST", required: true, displayDuringSetup: true)
         input(name: "deviceContent", type: "enum", title: "Content-Type", options: getCtype(), defaultValue: "application/x-www-form-urlencoded", required: true, displayDuringSetup: true)
         input(name: "deviceHeader", type: "string", title:"Device Header", description: "Extra header", displayDuringSetup: true)
-        input(name: "deviceBody", type: "string", title:"Body", description: "Body of message", displayDuringSetup: true)
+        input(name: "deviceOnCmd", type: "string", title:"On Cmd", description: "Command To Turn On", displayDuringSetup: true)
+	input(name: "deviceOffCmd", type: "string", title:"Off Cmd", description: "Command To Turn Off", displayDuringSetup: true)
         input name: "isDebugEnabled", type: "bool", title: "Enable debug logging?", defaultValue: false, required: false
     }
 }
@@ -50,30 +50,32 @@ def getCtype() {
     cType = ["application/x-www-form-urlencoded","application/json"]
 }
 
-def push() {
+//def push() {
     //toggle the switch to generate events for anything that is subscribed
-    sendEvent(name: "switch", value: "on", isStateChange: true)
-    runIn(1, toggleOff)
+//    sendEvent(name: "switch", value: "on", isStateChange: true)
+//    runIn(1, toggleOff)
     //sendEvent(name: "switch", value: "off", isStateChange: true)
-    runCmd(devicePath, deviceMethod)
-}
+//    runCmd(devicePath, deviceMethod)
+//}
 
-def toggleOff() {
-    sendEvent(name: "switch", value: "off", isStateChange: true)
-}
+//def toggleOff() {
+ //   sendEvent(name: "switch", value: "off", isStateChange: true)
+//}
 
 def on() {
-	push()
+	sendEvent(name: "switch", value: "on", isStateChange: true)
+	runCmd(devicePath, deviceMethod, deviceOnCmd)
 }
 
 def off() {
-	push()
+	sendEvent(name: "switch", value: "off", isStateChange: true)
+	runCmd(devicePath, deviceMethod, deviceOffCmd)
 }
 
-def runCmd(String varCommand, String method) {
+def runCmd(String varCommand, String method, String bodyPass) {
 	def localDevicePort = (devicePort==null) ? "80" : devicePort
 	def path = varCommand 
-	def body = (deviceBody) ? deviceBody : ""
+	def body = (bodyPass) ? bodyPass : ""
 	def headers = [:] 
     headers.put("HOST", "${deviceIP}:${localDevicePort}")
     if (deviceHeader) {
